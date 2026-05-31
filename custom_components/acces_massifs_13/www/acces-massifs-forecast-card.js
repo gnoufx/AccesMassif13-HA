@@ -1008,14 +1008,13 @@ class AccesMassifsForecastCardEditor extends LitElement {
     return html`
       <div class="card-config">
         <div class="option">
-          <ha-entity-picker
+          <ha-textfield
             label="Entité"
-            .hass=${this.hass}
-            .value=${this._config.entity}
+            .value=${this._config.entity || ''}
             .configValue=${'entity'}
-            @value-changed=${this._valueChanged}
-            allow-custom-entity
-          ></ha-entity-picker>
+            @input=${this._valueChanged}
+            style="width: 100%;"
+          ></ha-textfield>
         </div>
         <div class="option">
           <ha-textfield
