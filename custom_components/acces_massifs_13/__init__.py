@@ -98,6 +98,44 @@ async def _async_register_www(hass: HomeAssistant) -> None:
             ]
         )
         _LOGGER.debug("Registered static path for %s", www_path)
+        await _async_register_lovelace_resources(hass)
+
+
+async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
+    """Register the Lovelace card resources programmatically if using storage mode."""
+    lovelace = hass.data.get("lovelace")
+    if not lovelace:
+        _LOGGER.debug("Lovelace not loaded, skipping resource registration")
+        return
+
+    if not hasattr(lovelace, "resources"):
+        _LOGGER.debug("Lovelace is not in storage mode, skipping resource registration")
+        return
+
+    resources = lovelace.resources
+    if not hasattr(resources, "async_items") or not hasattr(resources, "async_create_item"):
+        return
+
+    if not resources.loaded:
+        await resources.async_load()
+
+    urls_to_register = [
+        f"/local/community/{DOMAIN}/acces-massifs-forecast-card.js",
+        f"/local/community/{DOMAIN}/acces-massifs-history-card.js",
+    ]
+
+    current_urls = {
+        res.get("url") if hasattr(res, "get") else getattr(res, "url", None)
+        for res in resources.async_items()
+    }
+
+    for url in urls_to_register:
+        if url not in current_urls:
+            _LOGGER.info("Registering Lovelace resource automatically: %s", url)
+            await resources.async_create_item({
+                "res_type": "module",
+                "url": url,
+            })
 
 
 async def _async_options_updated(
