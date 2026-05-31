@@ -516,19 +516,19 @@ class AccesMassifsHistoryCard extends LitElement {
     return css`
       :host {
         display: block;
-        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-family: var(--paper-font-common-typography_-_font-family, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
       }
 
       .card-container {
         position: relative;
-        background: rgba(30, 30, 30, 0.85);
+        background: var(--ha-card-background, var(--card-background-color, rgba(30, 30, 30, 0.85)));
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--ha-card-border-radius, 16px);
+        border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, rgba(255, 255, 255, 0.1));
         padding: 20px;
         overflow: hidden;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
       }
 
       /* --- Tooltip --- */
@@ -536,8 +536,8 @@ class AccesMassifsHistoryCard extends LitElement {
         display: none;
         position: absolute;
         z-index: 100;
-        background: rgba(15, 15, 15, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: var(--ha-card-background, var(--card-background-color, rgba(15, 15, 15, 0.95)));
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.15));
         border-radius: 6px;
         padding: 8px 12px;
         pointer-events: none;
@@ -545,13 +545,14 @@ class AccesMassifsHistoryCard extends LitElement {
         font-size: 11px;
         line-height: 1.5;
         max-width: 200px;
+        color: var(--primary-text-color, #fff);
       }
       .tooltip-date {
-        color: rgba(255, 255, 255, 0.5);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.5));
         margin-bottom: 2px;
       }
       .tooltip-massif {
-        color: rgba(255, 255, 255, 0.9);
+        color: var(--primary-text-color, rgba(255, 255, 255, 0.9));
         font-weight: 600;
         margin-bottom: 2px;
       }
@@ -564,7 +565,8 @@ class AccesMassifsHistoryCard extends LitElement {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.05));
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.1));
         border-radius: 12px;
         padding: 16px 20px;
         margin-bottom: 16px;
@@ -582,7 +584,7 @@ class AccesMassifsHistoryCard extends LitElement {
       .header-title {
         font-size: 18px;
         font-weight: 600;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
       }
       .header-right {
         display: flex;
@@ -600,19 +602,19 @@ class AccesMassifsHistoryCard extends LitElement {
         font-family: inherit;
       }
       .year-pill.active {
-        background: linear-gradient(135deg, #e94560, #c23152);
-        color: #fff;
+        background: var(--primary-color, #e94560);
+        color: var(--text-primary-color, #fff);
         border: 1px solid transparent;
-        box-shadow: 0 2px 12px rgba(233, 69, 96, 0.35);
+        box-shadow: 0 2px 12px rgba(var(--rgb-primary-color, 233, 69, 96), 0.35);
       }
       .year-pill:not(.active) {
         background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.6);
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.2));
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
       }
       .year-pill:not(.active):hover {
-        border-color: rgba(255, 255, 255, 0.5);
-        color: rgba(255, 255, 255, 0.85);
+        border-color: var(--ha-card-border-color, rgba(255, 255, 255, 0.5));
+        color: var(--primary-text-color, rgba(255, 255, 255, 0.85));
       }
 
       /* --- Heatmap --- */
@@ -628,11 +630,11 @@ class AccesMassifsHistoryCard extends LitElement {
         height: 4px;
       }
       .heatmap-scroll::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.05));
         border-radius: 2px;
       }
       .heatmap-scroll::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
+        background: var(--ha-card-border-color, rgba(255, 255, 255, 0.15));
         border-radius: 2px;
       }
 
@@ -655,7 +657,7 @@ class AccesMassifsHistoryCard extends LitElement {
       .month-label {
         position: absolute;
         font-size: 11px;
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.4));
         font-weight: 500;
         letter-spacing: 0.3px;
       }
@@ -669,10 +671,10 @@ class AccesMassifsHistoryCard extends LitElement {
         transition: opacity 0.3s ease, filter 0.3s ease, background 0.3s ease;
       }
       .heatmap-row:hover {
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.03));
       }
       .heatmap-row.selected {
-        background: rgba(255, 255, 255, 0.06);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.06));
       }
       .heatmap-row.dimmed {
         opacity: 0.25;
@@ -686,8 +688,8 @@ class AccesMassifsHistoryCard extends LitElement {
         min-width: 120px;
         max-width: 120px;
         font-size: 11px;
-        color: rgba(255, 255, 255, 0.8);
-        background: rgba(30, 30, 30, 0.95);
+        color: var(--primary-text-color, rgba(255, 255, 255, 0.8));
+        background: var(--ha-card-background, var(--card-background-color, rgba(30, 30, 30, 0.95)));
         text-overflow: ellipsis;
         overflow: hidden;
         white-space: nowrap;
@@ -740,15 +742,15 @@ class AccesMassifsHistoryCard extends LitElement {
         gap: 16px;
         padding: 10px 16px;
         margin-bottom: 12px;
-        background: linear-gradient(135deg, rgba(26, 26, 46, 0.7), rgba(22, 33, 62, 0.7));
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.03));
         border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.08));
         flex-wrap: wrap;
       }
       .detail-name {
         font-weight: 600;
         font-size: 14px;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
       }
       .detail-stats {
         display: flex;
@@ -757,13 +759,13 @@ class AccesMassifsHistoryCard extends LitElement {
         font-size: 12px;
       }
       .stat-auth {
-        color: #4CAF50;
+        color: var(--success-color, #4CAF50);
       }
       .stat-sep {
-        color: rgba(255, 255, 255, 0.3);
+        color: var(--ha-card-border-color, rgba(255, 255, 255, 0.3));
       }
       .stat-forb {
-        color: #F44336;
+        color: var(--error-color, #F44336);
       }
 
       /* --- Sparkline --- */
@@ -784,7 +786,7 @@ class AccesMassifsHistoryCard extends LitElement {
       .sparkline-label-top,
       .sparkline-label-bottom {
         font-size: 9px;
-        color: rgba(255, 255, 255, 0.3);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.3));
       }
       .sparkline-scroll {
         overflow-x: auto;
@@ -814,7 +816,7 @@ class AccesMassifsHistoryCard extends LitElement {
       .sparkline-month {
         position: absolute;
         font-size: 9px;
-        color: rgba(255, 255, 255, 0.3);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.3));
       }
 
       /* --- Legend --- */
@@ -840,7 +842,7 @@ class AccesMassifsHistoryCard extends LitElement {
       }
       .legend-text {
         font-size: 11px;
-        color: rgba(255, 255, 255, 0.5);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.5));
         white-space: nowrap;
       }
 
@@ -855,9 +857,9 @@ class AccesMassifsHistoryCard extends LitElement {
         height: 12px;
         border-radius: 6px;
         background: linear-gradient(90deg,
-          rgba(255,255,255,0.04) 25%,
-          rgba(255,255,255,0.08) 50%,
-          rgba(255,255,255,0.04) 75%
+          var(--primary-background-color, rgba(255,255,255,0.04)) 25%,
+          var(--ha-card-border-color, rgba(255,255,255,0.08)) 50%,
+          var(--primary-background-color, rgba(255,255,255,0.04)) 75%
         );
         background-size: 200% 100%;
         animation: pulse 1.5s ease-in-out infinite;
@@ -878,7 +880,7 @@ class AccesMassifsHistoryCard extends LitElement {
         gap: 10px;
         padding: 40px 20px;
         font-size: 14px;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
       }
       .error-icon {
         font-size: 20px;
@@ -892,7 +894,7 @@ class AccesMassifsHistoryCard extends LitElement {
         gap: 10px;
         padding: 60px 20px;
         font-size: 14px;
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.4));
       }
       .empty-icon {
         font-size: 24px;

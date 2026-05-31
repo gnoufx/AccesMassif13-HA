@@ -468,26 +468,27 @@ class AccesMassifsForecastCard extends LitElement {
     return css`
       :host {
         display: block;
-        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-family: var(--paper-font-common-typography_-_font-family, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
 
       .card-container {
-        background: rgba(30, 30, 30, 0.85);
+        background: var(--ha-card-background, var(--card-background-color, rgba(30, 30, 30, 0.85)));
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--ha-card-border-radius, 16px);
+        border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, rgba(255, 255, 255, 0.1));
         padding: 20px;
         overflow: hidden;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
       }
 
       /* ── Header ── */
       .header {
-        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.05));
         border-radius: 12px;
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.1));
         padding: 16px 20px;
         margin-bottom: 16px;
         display: flex;
@@ -537,7 +538,7 @@ class AccesMassifsForecastCard extends LitElement {
       .header-title {
         font-size: 18px;
         font-weight: 600;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -545,7 +546,7 @@ class AccesMassifsForecastCard extends LitElement {
 
       .header-subtitle {
         font-size: 13px;
-        color: rgba(255, 255, 255, 0.55);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.55));
         margin-top: 2px;
       }
 
@@ -561,9 +562,9 @@ class AccesMassifsForecastCard extends LitElement {
         flex-shrink: 0;
       }
 
-      .badge.green  { background: linear-gradient(135deg, #4CAF50, #66BB6A); }
-      .badge.orange { background: linear-gradient(135deg, #FF9800, #FFB74D); }
-      .badge.red    { background: linear-gradient(135deg, #F44336, #EF5350); }
+      .badge.green  { background: linear-gradient(135deg, var(--success-color, #4CAF50), #66BB6A); }
+      .badge.orange { background: linear-gradient(135deg, var(--warning-color, #FF9800), #FFB74D); }
+      .badge.red    { background: linear-gradient(135deg, var(--error-color, #F44336), #EF5350); }
 
       @keyframes pulse {
         0%, 100% { transform: scale(1); }
@@ -582,7 +583,7 @@ class AccesMassifsForecastCard extends LitElement {
 
       /* ── Mini Card ── */
       .massif-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.05));
         border-radius: 10px;
         padding: 12px 16px;
         display: flex;
@@ -590,17 +591,18 @@ class AccesMassifsForecastCard extends LitElement {
         gap: 12px;
         transition: all 0.2s ease;
         cursor: default;
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.05));
       }
 
       .massif-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        background: var(--primary-background-color, rgba(255, 255, 255, 0.08));
       }
 
-      .massif-card.border-green  { border-left: 3px solid #4CAF50; }
-      .massif-card.border-red    { border-left: 3px solid #F44336; }
-      .massif-card.border-gray   { border-left: 3px solid #555; }
+      .massif-card.border-green  { border-left: 3px solid var(--success-color, #4CAF50); }
+      .massif-card.border-red    { border-left: 3px solid var(--error-color, #F44336); }
+      .massif-card.border-gray   { border-left: 3px solid var(--disabled-color, #555); }
 
       .massif-card.animate-in {
         opacity: 0;
@@ -623,17 +625,17 @@ class AccesMassifsForecastCard extends LitElement {
       }
 
       .status-dot.green {
-        background: #4CAF50;
+        background: var(--success-color, #4CAF50);
         animation: greenPulse 2s ease-in-out infinite;
       }
 
       .status-dot.red {
-        background: #F44336;
+        background: var(--error-color, #F44336);
         animation: redPulse 1.5s ease-in-out infinite;
       }
 
       .status-dot.gray {
-        background: #555;
+        background: var(--disabled-color, #555);
       }
 
       @keyframes greenPulse {
@@ -655,7 +657,7 @@ class AccesMassifsForecastCard extends LitElement {
       .massif-name {
         font-size: 14px;
         font-weight: 600;
-        color: #fff;
+        color: var(--primary-text-color, #fff);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -663,7 +665,7 @@ class AccesMassifsForecastCard extends LitElement {
 
       .massif-status {
         font-size: 12px;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
         margin-top: 2px;
       }
 
@@ -673,14 +675,14 @@ class AccesMassifsForecastCard extends LitElement {
         font-weight: 600;
       }
 
-      .massif-extra.conditions { color: #FFB74D; }
-      .massif-extra.reinforced { color: #E53935; }
+      .massif-extra.conditions { color: var(--warning-color, #FFB74D); }
+      .massif-extra.reinforced { color: var(--error-color, #E53935); }
 
       /* ── Map ── */
       .map-container {
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.1));
         margin-top: 16px;
       }
 
@@ -713,13 +715,13 @@ class AccesMassifsForecastCard extends LitElement {
 
       .legend-label {
         font-size: 11px;
-        color: rgba(255, 255, 255, 0.55);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.55));
       }
 
       /* ── Off-Season Banner ── */
       .off-season-banner {
-        background: rgba(33, 150, 243, 0.1);
-        border: 1px solid rgba(33, 150, 243, 0.25);
+        background: rgba(var(--rgb-info-color, 33, 150, 243), 0.1);
+        border: 1px solid var(--info-color, rgba(33, 150, 243, 0.25));
         border-radius: 10px;
         padding: 12px 16px;
         margin-bottom: 16px;
@@ -727,7 +729,7 @@ class AccesMassifsForecastCard extends LitElement {
         align-items: center;
         gap: 12px;
         font-size: 13px;
-        color: #e3f2fd;
+        color: var(--primary-text-color, #fff);
         line-height: 1.4;
       }
 
@@ -743,7 +745,6 @@ class AccesMassifsForecastCard extends LitElement {
         100% { transform: rotate(360deg); }
       }
 
-
       /* ── Loading / Error ── */
       .loading {
         display: flex;
@@ -751,15 +752,15 @@ class AccesMassifsForecastCard extends LitElement {
         justify-content: center;
         gap: 10px;
         padding: 40px;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--secondary-text-color, rgba(255, 255, 255, 0.6));
         font-size: 14px;
       }
 
       .spinner {
         width: 20px;
         height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.15);
-        border-top-color: rgba(255, 255, 255, 0.6);
+        border: 2px solid var(--ha-card-border-color, rgba(255, 255, 255, 0.15));
+        border-top-color: var(--primary-text-color, rgba(255, 255, 255, 0.6));
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
@@ -769,12 +770,12 @@ class AccesMassifsForecastCard extends LitElement {
       }
 
       .error {
-        background: rgba(244, 67, 54, 0.1);
-        border: 1px solid rgba(244, 67, 54, 0.3);
+        background: rgba(var(--rgb-error-color, 244, 67, 54), 0.1);
+        border: 1px solid var(--error-color, rgba(244, 67, 54, 0.3));
         border-radius: 12px;
         padding: 20px;
         text-align: center;
-        color: #EF9A9A;
+        color: var(--error-color, #EF9A9A);
         font-size: 14px;
       }
 
