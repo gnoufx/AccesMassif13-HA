@@ -50,11 +50,12 @@ class AccesMassifsForecastCard extends LitElement {
   }
 
   setConfig(config) {
-    if (!config.entity) {
-      throw new Error('Please define an entity');
+    if (!config.entity && (!config.entities || config.entities.length === 0)) {
+      throw new Error('Please define an entity or entities');
     }
     this.config = {
       entity: config.entity,
+      entities: config.entities,
       title: config.title || "Accès aux massifs",
       show_map: config.show_map !== false,
       map_height: config.map_height || 400,
@@ -243,7 +244,7 @@ class AccesMassifsForecastCard extends LitElement {
 
     const stateObj = this._getStateObj();
     const attrs = stateObj ? stateObj.attributes : {};
-    const isIndividual = attrs && attrs.massif_id !== undefined;
+    const isIndividual = !this.config.entities && attrs && attrs.massif_id !== undefined;
     const center = isIndividual && attrs.latitude && attrs.longitude
       ? [attrs.latitude, attrs.longitude]
       : [43.45, 5.095];
@@ -271,6 +272,36 @@ class AccesMassifsForecastCard extends LitElement {
   }
 
   _getMassifs(stateObj) {
+    if (!this.hass) return null;
+
+    if (this.config.entities && this.config.entities.length > 0) {
+      const massifs = {};
+      for (const ent of this.config.entities) {
+        const entState = this.hass.states[ent];
+        if (!entState || !entState.attributes) continue;
+
+        const attrs = entState.attributes;
+        if (attrs.massifs) {
+          Object.assign(massifs, attrs.massifs);
+        } else if (attrs.massif_id !== undefined) {
+          massifs[attrs.massif_id] = {
+            name: attrs.massif_name,
+            today_level: attrs.level,
+            today_label: entState.state,
+            today_color: attrs.color,
+            today_procedure: attrs.procedure,
+            tomorrow_level: attrs.tomorrow_level,
+            tomorrow_label: attrs.tomorrow_label,
+            tomorrow_color: attrs.tomorrow_color,
+            tomorrow_procedure: attrs.tomorrow_procedure || "",
+            latitude: attrs.latitude,
+            longitude: attrs.longitude,
+          };
+        }
+      }
+      return Object.keys(massifs).length > 0 ? massifs : null;
+    }
+
     if (!stateObj) return null;
     const attrs = stateObj.attributes;
     if (!attrs) return null;
@@ -305,7 +336,6 @@ class AccesMassifsForecastCard extends LitElement {
     if (!massifs) return;
 
     const info = this._getDisplayInfo(stateObj.attributes);
-    const isIndividual = stateObj.attributes && stateObj.attributes.massif_id !== undefined;
 
     // Remove old layers
     this._markers.forEach((m) => m.remove());
@@ -315,11 +345,8 @@ class AccesMassifsForecastCard extends LitElement {
       // Draw actual polygons from GeoJSON
       const geoJsonLayer = L.geoJSON(this._geoJsonData, {
         filter: (feature) => {
-          if (isIndividual) {
-            // ONLY display the selected massif/zone
-            return String(feature.properties.ID) === String(stateObj.attributes.massif_id);
-          }
-          return true;
+          const mId = String(feature.properties.ID);
+          return massifs[mId] !== undefined;
         },
         style: (feature) => {
           const mId = feature.properties.ID;
@@ -369,6 +396,20 @@ class AccesMassifsForecastCard extends LitElement {
       }).addTo(this._map);
 
       this._markers.push(geoJsonLayer);
+
+      // Auto-fit bounds if we are displaying a subset of massifs
+      const totalFeatures = this._geoJsonData.features ? this._geoJsonData.features.length : 25;
+      const displayedCount = Object.keys(massifs).length;
+      if (displayedCount > 0 && displayedCount < totalFeatures) {
+        try {
+          const bounds = geoJsonLayer.getBounds();
+          if (bounds.isValid()) {
+            this._map.fitBounds(bounds, { padding: [20, 20] });
+          }
+        } catch (e) {
+          console.warn('Failed to fit map bounds:', e);
+        }
+      }
     } else {
       // Fallback: draw circle markers
       Object.values(massifs).forEach((m) => {
@@ -401,7 +442,17 @@ class AccesMassifsForecastCard extends LitElement {
 
   _getStateObj() {
     if (!this.hass || !this.config) return null;
-    return this.hass.states[this.config.entity] || null;
+    if (this.config.entity) {
+      return this.hass.states[this.config.entity] || null;
+    }
+    if (this.config.entities && this.config.entities.length > 0) {
+      for (const ent of this.config.entities) {
+        if (this.hass.states[ent]) {
+          return this.hass.states[ent];
+        }
+      }
+    }
+    return null;
   }
 
   // ── Lifecycle ────────────────────────────────────────────
@@ -876,14 +927,17 @@ class AccesMassifsForecastCard extends LitElement {
     let badgeClass = 'red';
     if (totalCount === 1) {
       badgeClass = accessibleCount === 1 ? 'green' : 'red';
-    } else {
-      if (accessibleCount > 20) badgeClass = 'green';
-      else if (accessibleCount >= 10) badgeClass = 'orange';
+    } else if (totalCount > 1) {
+      const ratio = accessibleCount / totalCount;
+      if (ratio >= 0.8) badgeClass = 'green';
+      else if (ratio >= 0.4) badgeClass = 'orange';
     }
 
+    const isSingleMassif = totalCount === 1;
+    const displayName = isSingleMassif && Object.values(massifs)[0]?.name || attrs.massif_name;
     const defaultTitle = info.mode === 'today'
-      ? (attrs.massif_name ? `Accès ${attrs.massif_name} — Aujourd'hui` : "Accès aux massifs — Aujourd'hui")
-      : (attrs.massif_name ? `Prévisions ${attrs.massif_name} — Demain` : "Prévisions d'accès — Demain");
+      ? (displayName ? `Accès ${displayName} — Aujourd'hui` : "Accès aux massifs — Aujourd'hui")
+      : (displayName ? `Prévisions ${displayName} — Demain` : "Prévisions d'accès — Demain");
     const title = this.config.title === "Accès aux massifs" ? defaultTitle : this.config.title;
 
     return html`
@@ -1038,10 +1092,20 @@ class AccesMassifsForecastCardEditor extends LitElement {
       newValue = target.value;
     }
 
+    if (configValue === 'entities') {
+      newValue = typeof newValue === 'string'
+        ? newValue.split(',').map(s => s.trim()).filter(s => s.length > 0)
+        : newValue;
+    }
+
     const newConfig = {
       ...this._config,
       [configValue]: newValue,
     };
+
+    if (configValue === 'entities' && (!newValue || newValue.length === 0)) {
+      delete newConfig.entities;
+    }
 
     const event = new CustomEvent("config-changed", {
       detail: { config: newConfig },
@@ -1058,9 +1122,18 @@ class AccesMassifsForecastCardEditor extends LitElement {
       <div class="card-config">
         <div class="option">
           <ha-textfield
-            label="Entité"
+            label="Entité unique (ex: sensor.acces_massifs_13_summary)"
             .value=${this._config.entity || ''}
             .configValue=${'entity'}
+            @input=${this._valueChanged}
+            style="width: 100%;"
+          ></ha-textfield>
+        </div>
+        <div class="option">
+          <ha-textfield
+            label="Plusieurs entités (séparées par des virgules)"
+            .value=${this._config.entities ? this._config.entities.join(', ') : ''}
+            .configValue=${'entities'}
             @input=${this._valueChanged}
             style="width: 100%;"
           ></ha-textfield>
