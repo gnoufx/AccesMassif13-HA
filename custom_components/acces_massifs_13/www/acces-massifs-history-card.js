@@ -49,6 +49,20 @@ class AccesMassifsHistoryCard extends LitElement {
     this._tooltipEl = null;
   }
 
+  static getConfigElement() {
+    return document.createElement('acces-massifs-history-card-editor');
+  }
+
+  static getStubConfig() {
+    return {
+      entity: 'sensor.acces_massifs_13_summary',
+      title: 'Historique des accès aux massifs',
+      year: new Date().getFullYear(),
+      animate: true,
+      show_sparkline: true,
+    };
+  }
+
   setConfig(config) {
     if (!config.entity) {
       throw new Error('Please define an entity');
@@ -895,3 +909,125 @@ window.customCards.push({
   name: 'Accès Massifs - Historique',
   description: 'Historique des accès aux massifs forestiers des Bouches-du-Rhône',
 });
+
+class AccesMassifsHistoryCardEditor extends LitElement {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      _config: { type: Object },
+    };
+  }
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  _valueChanged(ev) {
+    if (!this._config || !this.hass) return;
+    const target = ev.target;
+    const configValue = target.configValue;
+    if (!configValue) return;
+
+    let newValue = ev.detail ? ev.detail.value : target.value;
+    if (target.tagName === 'HA-SWITCH') {
+      newValue = target.checked;
+    } else if (target.tagName === 'HA-TEXTFIELD' && target.type === 'number') {
+      newValue = parseInt(target.value, 10) || 0;
+    } else if (target.tagName === 'HA-TEXTFIELD') {
+      newValue = target.value;
+    }
+
+    const newConfig = {
+      ...this._config,
+      [configValue]: newValue,
+    };
+
+    const event = new CustomEvent("config-changed", {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+
+    return html`
+      <div class="card-config">
+        <div class="option">
+          <ha-entity-picker
+            label="Entité"
+            .hass=${this.hass}
+            .value=${this._config.entity}
+            .configValue=${'entity'}
+            @value-changed=${this._valueChanged}
+            allow-custom-entity
+          ></ha-entity-picker>
+        </div>
+        <div class="option">
+          <ha-textfield
+            label="Titre"
+            .value=${this._config.title || ''}
+            .configValue=${'title'}
+            @input=${this._valueChanged}
+            style="width: 100%;"
+          ></ha-textfield>
+        </div>
+        <div class="option">
+          <ha-textfield
+            label="Année par défaut"
+            type="number"
+            .value=${this._config.year || new Date().getFullYear()}
+            .configValue=${'year'}
+            @input=${this._valueChanged}
+            style="width: 100%;"
+          ></ha-textfield>
+        </div>
+        <div class="option switch-option">
+          <ha-switch
+            .checked=${this._config.show_sparkline !== false}
+            .configValue=${'show_sparkline'}
+            @change=${this._valueChanged}
+          ></ha-switch>
+          <span class="switch-label">Afficher la sparkline de tendance</span>
+        </div>
+        <div class="option switch-option">
+          <ha-switch
+            .checked=${this._config.animate !== false}
+            .configValue=${'animate'}
+            @change=${this._valueChanged}
+          ></ha-switch>
+          <span class="switch-label">Activer les animations</span>
+        </div>
+      </div>
+    `;
+  }
+
+  static get styles() {
+    return css`
+      .card-config {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 8px 0;
+      }
+      .option {
+        display: flex;
+        flex-direction: column;
+      }
+      .switch-option {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        margin: 4px 0;
+      }
+      .switch-label {
+        font-size: 14px;
+        color: var(--primary-text-color);
+      }
+    `;
+  }
+}
+customElements.define('acces-massifs-history-card-editor', AccesMassifsHistoryCardEditor);

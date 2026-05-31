@@ -34,6 +34,21 @@ class AccesMassifsForecastCard extends LitElement {
     this._geoJsonData = null;
   }
 
+  static getConfigElement() {
+    return document.createElement('acces-massifs-forecast-card-editor');
+  }
+
+  static getStubConfig() {
+    return {
+      entity: 'sensor.acces_massifs_13_summary',
+      title: 'Accès aux massifs',
+      show_map: true,
+      map_height: 400,
+      animate: true,
+      mode: 'auto',
+    };
+  }
+
   setConfig(config) {
     if (!config.entity) {
       throw new Error('Please define an entity');
@@ -946,3 +961,149 @@ console.info(
   'color: #fff; background: #4CAF50; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;',
   'color: #4CAF50; background: #1a1a2e; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;'
 );
+
+class AccesMassifsForecastCardEditor extends LitElement {
+  static get properties() {
+    return {
+      hass: { type: Object },
+      _config: { type: Object },
+    };
+  }
+
+  setConfig(config) {
+    this._config = config;
+  }
+
+  _valueChanged(ev) {
+    if (!this._config || !this.hass) return;
+    const target = ev.target;
+    const configValue = target.configValue;
+    if (!configValue) return;
+
+    let newValue = ev.detail ? ev.detail.value : target.value;
+    if (target.tagName === 'HA-SWITCH') {
+      newValue = target.checked;
+    } else if (target.tagName === 'HA-TEXTFIELD' && target.type === 'number') {
+      newValue = parseInt(target.value, 10) || 0;
+    } else if (target.tagName === 'HA-TEXTFIELD') {
+      newValue = target.value;
+    }
+
+    const newConfig = {
+      ...this._config,
+      [configValue]: newValue,
+    };
+
+    const event = new CustomEvent("config-changed", {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(event);
+  }
+
+  render() {
+    if (!this.hass || !this._config) return html``;
+
+    return html`
+      <div class="card-config">
+        <div class="option">
+          <ha-entity-picker
+            label="Entité"
+            .hass=${this.hass}
+            .value=${this._config.entity}
+            .configValue=${'entity'}
+            @value-changed=${this._valueChanged}
+            allow-custom-entity
+          ></ha-entity-picker>
+        </div>
+        <div class="option">
+          <ha-textfield
+            label="Titre"
+            .value=${this._config.title || ''}
+            .configValue=${'title'}
+            @input=${this._valueChanged}
+            style="width: 100%;"
+          ></ha-textfield>
+        </div>
+        <div class="option select-option">
+          <label class="select-label">Mode d'affichage</label>
+          <ha-select
+            .value=${this._config.mode || 'auto'}
+            .configValue=${'mode'}
+            @selected=${this._valueChanged}
+            @closed=${(ev) => ev.stopPropagation()}
+            style="width: 100%;"
+          >
+            <ha-list-item value="auto">Automatique (Intelligent)</ha-list-item>
+            <ha-list-item value="today">Aujourd'hui</ha-list-item>
+            <ha-list-item value="tomorrow">Demain</ha-list-item>
+          </ha-select>
+        </div>
+        <div class="option switch-option">
+          <ha-switch
+            .checked=${this._config.show_map !== false}
+            .configValue=${'show_map'}
+            @change=${this._valueChanged}
+          ></ha-switch>
+          <span class="switch-label">Afficher la carte Leaflet</span>
+        </div>
+        ${this._config.show_map !== false ? html`
+          <div class="option">
+            <ha-textfield
+              label="Hauteur de la carte (px)"
+              type="number"
+              .value=${this._config.map_height || 400}
+              .configValue=${'map_height'}
+              @input=${this._valueChanged}
+              style="width: 100%;"
+            ></ha-textfield>
+          </div>
+        ` : ''}
+        <div class="option switch-option">
+          <ha-switch
+            .checked=${this._config.animate !== false}
+            .configValue=${'animate'}
+            @change=${this._valueChanged}
+          ></ha-switch>
+          <span class="switch-label">Activer les animations</span>
+        </div>
+      </div>
+    `;
+  }
+
+  static get styles() {
+    return css`
+      .card-config {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 8px 0;
+      }
+      .option {
+        display: flex;
+        flex-direction: column;
+      }
+      .switch-option {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        margin: 4px 0;
+      }
+      .switch-label {
+        font-size: 14px;
+        color: var(--primary-text-color);
+      }
+      .select-option {
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .select-label {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+      }
+    `;
+  }
+}
+customElements.define('acces-massifs-forecast-card-editor', AccesMassifsForecastCardEditor);
