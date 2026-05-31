@@ -13,7 +13,7 @@ const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
 const scriptUrl = new URL(import.meta.url);
-const cardVersion = scriptUrl.searchParams.get('v') || '1.0.5';
+const cardVersion = scriptUrl.searchParams.get('v') || '1.0.6';
 
 class AccesMassifsForecastCard extends LitElement {
   static get properties() {
@@ -61,7 +61,7 @@ class AccesMassifsForecastCard extends LitElement {
     this.config = {
       entity: config.entity,
       entities: config.entities,
-      title: config.title || "Accès aux massifs",
+      title: config.title,
       show_map: config.show_map !== false,
       map_height: config.map_height || 400,
       animate: config.animate !== false,
@@ -964,11 +964,22 @@ class AccesMassifsForecastCard extends LitElement {
     }
 
     const isSingleMassif = totalCount === 1;
-    const displayName = isSingleMassif && Object.values(massifs)[0]?.name || attrs.massif_name;
+    let displayName = "";
+    if (this.config.entities && this.config.entities.length > 0) {
+      displayName = Object.values(massifs).map(m => m.name).filter(Boolean).join(', ');
+    } else if (isSingleMassif) {
+      displayName = Object.values(massifs)[0]?.name || attrs.massif_name;
+    } else {
+      displayName = attrs.massif_name || "";
+    }
+
     const defaultTitle = info.mode === 'today'
       ? (displayName ? `Accès ${displayName} — Aujourd'hui` : "Accès aux massifs — Aujourd'hui")
       : (displayName ? `Prévisions ${displayName} — Demain` : "Prévisions d'accès — Demain");
-    const title = this.config.title === "Accès aux massifs" ? defaultTitle : this.config.title;
+
+    const customTitle = this.config.title && this.config.title.trim() !== "" ? this.config.title : null;
+    const suffix = info.mode === 'today' ? " — Aujourd'hui" : " — Demain";
+    const title = customTitle ? `${customTitle}${suffix}` : defaultTitle;
 
     return html`
       <div class="header">

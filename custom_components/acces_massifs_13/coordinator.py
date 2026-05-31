@@ -10,6 +10,7 @@ import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -64,7 +65,31 @@ class AccesMassifsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=self._compute_interval(),
         )
 
+        # Track the daily scan time
+        self._unsub_track_time = async_track_time_change(
+            hass,
+            self._handle_daily_scan_time,
+            hour=self.scan_hour,
+            minute=self.scan_minute,
+            second=0,
+        )
+
     # ── Helpers ────────────────────────────────────────────────────────────
+
+    async def _handle_daily_scan_time(self, _datetime_now: datetime) -> None:
+        """Triggered at the daily scan time to fetch fresh data."""
+        _LOGGER.info(
+            "Scheduled daily scan time reached (%02d:%02d) - triggering data refresh",
+            self.scan_hour,
+            self.scan_minute,
+        )
+        await self.async_request_refresh()
+
+    async def async_unload(self) -> None:
+        """Unload the coordinator and cancel any scheduled tasks."""
+        if self._unsub_track_time:
+            self._unsub_track_time()
+            self._unsub_track_time = None
 
     @staticmethod
     def _is_in_season(now: datetime | None = None) -> bool:
@@ -149,34 +174,6 @@ class AccesMassifsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Adjust polling cadence dynamically
         self.update_interval = self._compute_interval()
 
-        # Off‑season: return a skeleton with level 1 (open) for every massif
-        if not in_season:
-            _LOGGER.debug("Off season – returning open access data")
-            massifs_out: dict[str, Any] = {}
-            for m_id, m_info in MASSIFS.items():
-                massifs_out[m_id] = {
-                    "name": m_info["name"],
-                    "today_level": 1,
-                    "today_color": LEVEL_COLORS[1],
-                    "today_label": LEVEL_LABELS[1],
-                    "today_procedure": 0,
-                    "tomorrow_level": 1,
-                    "tomorrow_color": LEVEL_COLORS[1],
-                    "tomorrow_label": LEVEL_LABELS[1],
-                    "tomorrow_procedure": 0,
-                    "latitude": m_info["latitude"],
-                    "longitude": m_info["longitude"],
-                }
-            history = await self.storage.async_get_all_history()
-            return {
-                "is_season": False,
-                "today_date": now.strftime("%Y%m%d"),
-                "tomorrow_date": (now + timedelta(days=1)).strftime("%Y%m%d"),
-                "massifs": massifs_out,
-                "history": history,
-            }
-
-        # In season: fetch today and tomorrow
         today_str = now.strftime("%Y%m%d")
         tomorrow_str = (now + timedelta(days=1)).strftime("%Y%m%d")
 
@@ -192,8 +189,17 @@ class AccesMassifsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         today_storage: dict[str, Any] = {}
 
         for m_id, m_info in MASSIFS.items():
-            today_level, today_proc = self._parse_massif_data(raw_today, m_id)
-            tmrw_level, tmrw_proc = self._parse_massif_data(raw_tomorrow, m_id)
+            # Today's level and procedure
+            if raw_today is not None:
+                today_level, today_proc = self._parse_massif_data(raw_today, m_id)
+            else:
+                today_level, today_proc = (1 if not in_season else 0), 0
+
+            # Tomorrow's level and procedure
+            if raw_tomorrow is not None:
+                tmrw_level, tmrw_proc = self._parse_massif_data(raw_tomorrow, m_id)
+            else:
+                tmrw_level, tmrw_proc = (1 if not in_season else 0), 0
 
             massifs_out[m_id] = {
                 "name": m_info["name"],
@@ -215,14 +221,14 @@ class AccesMassifsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "procedure": today_proc,
             }
 
-        # Persist today's snapshot
+        # Persist today's snapshot if available
         if raw_today is not None:
             await self.storage.async_save_day(today_str, today_storage)
 
         history = await self.storage.async_get_all_history()
 
         return {
-            "is_season": True,
+            "is_season": in_season,
             "today_date": today_str,
             "tomorrow_date": tomorrow_str,
             "massifs": massifs_out,

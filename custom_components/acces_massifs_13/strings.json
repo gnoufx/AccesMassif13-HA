@@ -24,5 +24,13 @@
         }
       }
     }
+  },
+  "entity": {
+    "time": {
+      "scan_time": {
+        "name": "Heure de récupération"
+      }
+    }
   }
 }
+

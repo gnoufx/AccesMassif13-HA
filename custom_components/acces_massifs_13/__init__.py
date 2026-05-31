@@ -23,7 +23,7 @@ from .storage import AccesMassifsStorage
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TIME]
 
 SERVICE_FORCE_UPDATE = "force_update"
 
@@ -118,6 +118,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, PLATFORMS
     )
     if unload_ok:
+        coordinator = hass.data[DOMAIN].get(entry.entry_id)
+        if coordinator and hasattr(coordinator, "async_unload"):
+            await coordinator.async_unload()
+
         hass.data[DOMAIN].pop(entry.entry_id, None)
         # Clean up domain data dict if empty
         if not hass.data[DOMAIN]:
