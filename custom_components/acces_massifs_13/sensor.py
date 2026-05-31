@@ -234,6 +234,8 @@ class AccesMassifsSummarySensor(
             "is_season": coord_data.get("is_season"),
             "today_date": coord_data.get("today_date"),
             "tomorrow_date": coord_data.get("tomorrow_date"),
+            "scan_hour": self.coordinator.scan_hour,
+            "scan_minute": self.coordinator.scan_minute,
             "massifs": massifs_summary,
             "history": coord_data.get("history", {}),
         }

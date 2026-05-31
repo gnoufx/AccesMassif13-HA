@@ -83,17 +83,18 @@ animate: true
 show_sparkline: true
 ```
 
-### Carte Prévisions
+### Carte Accès & Cartographie
 
-Affiche les prévisions d'accès pour le lendemain avec carte interactive optionnelle.
+Affiche l'état d'accès aux massifs avec un mode d'affichage intelligent (aujourd'hui ou demain selon l'heure de publication) avec une carte Leaflet interactive optionnelle.
 
 ```yaml
 type: custom:acces-massifs-forecast-card
 entity: sensor.acces_massifs_13_summary
-title: "Prévisions d'accès — Demain"
+title: "Accès aux massifs"
 show_map: true
 map_height: 400
 animate: true
+mode: auto  # optionnel: auto (défaut, intelligent), today (toujours aujourd'hui), tomorrow (toujours demain)
 ```
 
 ## 🔔 Niveaux d'accès

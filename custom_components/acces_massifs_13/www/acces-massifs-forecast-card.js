@@ -40,10 +40,11 @@ class AccesMassifsForecastCard extends LitElement {
     }
     this.config = {
       entity: config.entity,
-      title: config.title || "Prévisions d'accès — Demain",
+      title: config.title || "Accès aux massifs",
       show_map: config.show_map !== false,
       map_height: config.map_height || 400,
       animate: config.animate !== false,
+      mode: config.mode || 'auto', // 'auto' | 'today' | 'tomorrow'
     };
   }
 
@@ -67,6 +68,60 @@ class AccesMassifsForecastCard extends LitElement {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     return d;
+  }
+
+  _getDisplayMode(attrs) {
+    const configMode = this.config.mode || 'auto';
+    if (configMode === 'today') return 'today';
+    if (configMode === 'tomorrow') return 'tomorrow';
+
+    // auto mode
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+
+    const scanHour = attrs && attrs.scan_hour !== undefined ? attrs.scan_hour : 18;
+    const scanMin = attrs && attrs.scan_minute !== undefined ? attrs.scan_minute : 30;
+
+    if (currentHour < scanHour || (currentHour === scanHour && currentMin <= scanMin)) {
+      return 'today';
+    }
+    return 'tomorrow';
+  }
+
+  _parseDateKey(dateStr) {
+    if (!dateStr || dateStr.length !== 8) return new Date();
+    const y = parseInt(dateStr.substring(0, 4), 10);
+    const m = parseInt(dateStr.substring(4, 6), 10) - 1;
+    const d = parseInt(dateStr.substring(6, 8), 10);
+    return new Date(y, m, d);
+  }
+
+  _getDisplayInfo(attrs) {
+    if (!attrs) {
+      return {
+        mode: 'tomorrow',
+        dateLabel: "Demain",
+        dateObj: this._getTomorrowDate(),
+        levelKey: 'tomorrow_level',
+        colorKey: 'tomorrow_color',
+        labelKey: 'tomorrow_label',
+        procedureKey: 'tomorrow_procedure',
+      };
+    }
+    const mode = this._getDisplayMode(attrs);
+    const dateStr = mode === 'today' ? attrs.today_date : attrs.tomorrow_date;
+    const dateObj = dateStr ? this._parseDateKey(dateStr) : (mode === 'today' ? new Date() : this._getTomorrowDate());
+    
+    return {
+      mode,
+      dateLabel: mode === 'today' ? "Aujourd'hui" : "Demain",
+      dateObj: dateObj,
+      levelKey: mode === 'today' ? 'today_level' : 'tomorrow_level',
+      colorKey: mode === 'today' ? 'today_color' : 'tomorrow_color',
+      labelKey: mode === 'today' ? 'today_label' : 'tomorrow_label',
+      procedureKey: mode === 'today' ? 'today_procedure' : 'tomorrow_procedure',
+    };
   }
 
   _formatFrenchDate(date) {
@@ -200,6 +255,8 @@ class AccesMassifsForecastCard extends LitElement {
     const massifs = stateObj.attributes.massifs;
     if (!massifs) return;
 
+    const info = this._getDisplayInfo(stateObj.attributes);
+
     // Remove old layers
     this._markers.forEach((m) => m.remove());
     this._markers = [];
@@ -210,7 +267,7 @@ class AccesMassifsForecastCard extends LitElement {
         style: (feature) => {
           const mId = feature.properties.ID;
           const m = massifs[mId] || {};
-          const level = m.tomorrow_level;
+          const level = m[info.levelKey];
           const color = this._getStatusColor(level);
           return {
             fillColor: color,
@@ -223,8 +280,9 @@ class AccesMassifsForecastCard extends LitElement {
         onEachFeature: (feature, layer) => {
           const mId = feature.properties.ID;
           const m = massifs[mId] || {};
-          const color = this._getStatusColor(m.tomorrow_level);
-          const label = this._getStatusLabel(m.tomorrow_level);
+          const level = m[info.levelKey];
+          const color = this._getStatusColor(level);
+          const label = this._getStatusLabel(level);
 
           layer.bindPopup(
             `<div style="font-family:sans-serif;font-size:13px;line-height:1.4;">` +
@@ -258,7 +316,8 @@ class AccesMassifsForecastCard extends LitElement {
       // Fallback: draw circle markers
       Object.values(massifs).forEach((m) => {
         if (!m.latitude || !m.longitude) return;
-        const color = this._getStatusColor(m.tomorrow_level);
+        const level = m[info.levelKey];
+        const color = this._getStatusColor(level);
 
         const marker = L.circleMarker([m.latitude, m.longitude], {
           radius: 12,
@@ -269,7 +328,7 @@ class AccesMassifsForecastCard extends LitElement {
           fillOpacity: 0.5,
         }).addTo(this._map);
 
-        const label = this._getStatusLabel(m.tomorrow_level);
+        const label = this._getStatusLabel(level);
         marker.bindPopup(
           `<div style="font-family:sans-serif;font-size:13px;line-height:1.4;">` +
           `<b style="font-size:14px;">${m.name}</b><br>` +
@@ -313,9 +372,11 @@ class AccesMassifsForecastCard extends LitElement {
     const massifs = stateObj.attributes.massifs;
     if (!massifs) return;
 
-    // Calculate accessible count for tomorrow
+    const info = this._getDisplayInfo(stateObj.attributes);
+
+    // Calculate accessible count for the selected mode
     const accessibleCount = Object.values(massifs).filter(
-      (m) => m.tomorrow_level === 1 || m.tomorrow_level === 2
+      (m) => m[info.levelKey] === 1 || m[info.levelKey] === 2
     ).length;
 
     if (this.config.animate) {
@@ -716,7 +777,7 @@ class AccesMassifsForecastCard extends LitElement {
     if (isSeason === false) {
       return html`
         <div class="card-container">
-          ${this._renderHeader(massifs)}
+          ${this._renderHeader(attrs, massifs)}
           <div class="off-season">
             <div class="off-season-trees">🌲🌳🌲🌳🌲</div>
             <div class="off-season-title">Hors saison</div>
@@ -731,7 +792,7 @@ class AccesMassifsForecastCard extends LitElement {
     if (!massifs || Object.keys(massifs).length === 0) {
       return html`
         <div class="card-container">
-          ${this._renderHeader(massifs)}
+          ${this._renderHeader(attrs, massifs)}
           <div class="no-data">Données non disponibles</div>
         </div>
       `;
@@ -739,17 +800,17 @@ class AccesMassifsForecastCard extends LitElement {
 
     return html`
       <div class="card-container">
-        ${this._renderHeader(massifs)}
-        ${this._renderGrid(massifs)}
+        ${this._renderHeader(attrs, massifs)}
+        ${this._renderGrid(attrs, massifs)}
         ${this.config.show_map ? this._renderMap() : ''}
         ${this._renderLegend()}
       </div>
     `;
   }
 
-  _renderHeader(massifs) {
-    const tomorrow = this._getTomorrowDate();
-    const dateStr = this._formatFrenchDate(tomorrow);
+  _renderHeader(attrs, massifs) {
+    const info = this._getDisplayInfo(attrs);
+    const dateStr = this._formatFrenchDate(info.dateObj);
 
     let accessibleCount = 0;
     let totalCount = 0;
@@ -757,7 +818,7 @@ class AccesMassifsForecastCard extends LitElement {
       const vals = Object.values(massifs);
       totalCount = vals.length;
       accessibleCount = vals.filter(
-        (m) => m.tomorrow_level === 1 || m.tomorrow_level === 2
+        (m) => m[info.levelKey] === 1 || m[info.levelKey] === 2
       ).length;
     }
 
@@ -769,12 +830,15 @@ class AccesMassifsForecastCard extends LitElement {
     if (accessibleCount > 20) badgeClass = 'green';
     else if (accessibleCount >= 10) badgeClass = 'orange';
 
+    const defaultTitle = info.mode === 'today' ? "Accès aux massifs — Aujourd'hui" : "Prévisions d'accès — Demain";
+    const title = this.config.title === "Accès aux massifs" ? defaultTitle : this.config.title;
+
     return html`
       <div class="header">
         <div class="header-left">
           <div class="header-icon ${iconClass}">${icon}</div>
           <div class="header-text">
-            <div class="header-title">${this.config.title || "Prévisions d'accès"}</div>
+            <div class="header-title">${title}</div>
             <div class="header-subtitle">${dateStr}</div>
           </div>
         </div>
@@ -785,7 +849,8 @@ class AccesMassifsForecastCard extends LitElement {
     `;
   }
 
-  _renderGrid(massifs) {
+  _renderGrid(attrs, massifs) {
+    const info = this._getDisplayInfo(attrs);
     // Sort: accessible (1,2) first, then forbidden (3,4), then unknown (0)
     const sorted = Object.entries(massifs)
       .map(([id, m]) => ({ id, ...m }))
@@ -795,8 +860,8 @@ class AccesMassifsForecastCard extends LitElement {
           if (level === 3 || level === 4) return 1;
           return 2;
         };
-        const ga = groupOrder(a.tomorrow_level);
-        const gb = groupOrder(b.tomorrow_level);
+        const ga = groupOrder(a[info.levelKey]);
+        const gb = groupOrder(b[info.levelKey]);
         if (ga !== gb) return ga - gb;
         return (a.name || '').localeCompare(b.name || '', 'fr');
       });
@@ -808,13 +873,13 @@ class AccesMassifsForecastCard extends LitElement {
 
     return html`
       <div class="massif-grid ${colsClass}">
-        ${sorted.map((m, i) => this._renderMassifCard(m, i))}
+        ${sorted.map((m, i) => this._renderMassifCard(info, m, i))}
       </div>
     `;
   }
 
-  _renderMassifCard(m, index) {
-    const level = m.tomorrow_level;
+  _renderMassifCard(info, m, index) {
+    const level = m[info.levelKey];
     const color = this._getStatusColor(level);
     const label = this._getStatusLabel(level);
 
@@ -883,8 +948,8 @@ customElements.define('acces-massifs-forecast-card', AccesMassifsForecastCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'acces-massifs-forecast-card',
-  name: 'Accès Massifs 13 — Prévisions',
-  description: "Carte de prévisions d'accès aux massifs forestiers des Bouches-du-Rhône pour demain, avec carte Leaflet interactive.",
+  name: 'Accès Massifs 13 — Cartographie',
+  description: "Carte d'accès aux massifs forestiers des Bouches-du-Rhône avec mode d'affichage intelligent (Aujourd'hui / Demain) et carte interactive.",
 });
 
 console.info(
