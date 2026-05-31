@@ -1,0 +1,11 @@
+{
+  "domain": "acces_massifs_13",
+  "name": "Accès Massifs Forestiers 13",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/acces-massifs-13-ha",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/acces-massifs-13-ha/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}

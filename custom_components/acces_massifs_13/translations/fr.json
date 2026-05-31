@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Accès Massifs Forestiers 13",
+        "description": "Configure la récupération quotidienne des niveaux d'accès aux massifs forestiers des Bouches-du-Rhône.",
+        "data": {
+          "scan_hour": "Heure de mise à jour",
+          "scan_minute": "Minute de mise à jour"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "L'intégration est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "scan_hour": "Heure de mise à jour",
+          "scan_minute": "Minute de mise à jour"
+        }
+      }
+    }
+  }
+}
