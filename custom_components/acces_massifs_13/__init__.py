@@ -184,7 +184,7 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
         return
 
     # Using the current integration version for query cache-busting
-    version = "1.0.1"
+    version = "1.0.2"
 
     card_resources = [
         {

@@ -241,9 +241,17 @@ class AccesMassifsForecastCard extends LitElement {
     leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
     this.shadowRoot.appendChild(leafletCSS);
 
+    const stateObj = this._getStateObj();
+    const attrs = stateObj ? stateObj.attributes : {};
+    const isIndividual = attrs && attrs.massif_id !== undefined;
+    const center = isIndividual && attrs.latitude && attrs.longitude
+      ? [attrs.latitude, attrs.longitude]
+      : [43.45, 5.095];
+    const zoom = isIndividual ? 11 : 9;
+
     this._map = L.map(container, {
-      center: [43.45, 5.095],
-      zoom: 9,
+      center: center,
+      zoom: zoom,
       zoomControl: true,
       attributionControl: true,
     });
@@ -262,15 +270,42 @@ class AccesMassifsForecastCard extends LitElement {
     }, 200);
   }
 
+  _getMassifs(stateObj) {
+    if (!stateObj) return null;
+    const attrs = stateObj.attributes;
+    if (!attrs) return null;
+    let massifs = attrs.massifs;
+    const isIndividual = attrs.massif_id !== undefined;
+    if (isIndividual && !massifs) {
+      massifs = {
+        [attrs.massif_id]: {
+          name: attrs.massif_name,
+          today_level: attrs.level,
+          today_label: stateObj.state,
+          today_color: attrs.color,
+          today_procedure: attrs.procedure,
+          tomorrow_level: attrs.tomorrow_level,
+          tomorrow_label: attrs.tomorrow_label,
+          tomorrow_color: attrs.tomorrow_color,
+          tomorrow_procedure: attrs.tomorrow_procedure || "",
+          latitude: attrs.latitude,
+          longitude: attrs.longitude,
+        }
+      };
+    }
+    return massifs;
+  }
+
   _updateMapMarkers() {
     if (!this._map || !window.L) return;
 
     const stateObj = this._getStateObj();
     if (!stateObj) return;
-    const massifs = stateObj.attributes.massifs;
+    const massifs = this._getMassifs(stateObj);
     if (!massifs) return;
 
     const info = this._getDisplayInfo(stateObj.attributes);
+    const isIndividual = stateObj.attributes && stateObj.attributes.massif_id !== undefined;
 
     // Remove old layers
     this._markers.forEach((m) => m.remove());
@@ -279,6 +314,13 @@ class AccesMassifsForecastCard extends LitElement {
     if (this._geoJsonData) {
       // Draw actual polygons from GeoJSON
       const geoJsonLayer = L.geoJSON(this._geoJsonData, {
+        filter: (feature) => {
+          if (isIndividual) {
+            // ONLY display the selected massif/zone
+            return String(feature.properties.ID) === String(stateObj.attributes.massif_id);
+          }
+          return true;
+        },
         style: (feature) => {
           const mId = feature.properties.ID;
           const m = massifs[mId] || {};
@@ -384,7 +426,7 @@ class AccesMassifsForecastCard extends LitElement {
 
     const stateObj = this._getStateObj();
     if (!stateObj) return;
-    const massifs = stateObj.attributes.massifs;
+    const massifs = this._getMassifs(stateObj);
     if (!massifs) return;
 
     const info = this._getDisplayInfo(stateObj.attributes);
@@ -778,7 +820,7 @@ class AccesMassifsForecastCard extends LitElement {
 
     const attrs = stateObj.attributes;
     const isSeason = attrs.is_season;
-    const massifs = attrs.massifs;
+    const massifs = this._getMassifs(stateObj);
 
     if (!massifs || Object.keys(massifs).length === 0) {
       return html`
@@ -831,10 +873,16 @@ class AccesMassifsForecastCard extends LitElement {
     const icon = isMostlyAccessible ? '🌲' : '🔥';
 
     let badgeClass = 'red';
-    if (accessibleCount > 20) badgeClass = 'green';
-    else if (accessibleCount >= 10) badgeClass = 'orange';
+    if (totalCount === 1) {
+      badgeClass = accessibleCount === 1 ? 'green' : 'red';
+    } else {
+      if (accessibleCount > 20) badgeClass = 'green';
+      else if (accessibleCount >= 10) badgeClass = 'orange';
+    }
 
-    const defaultTitle = info.mode === 'today' ? "Accès aux massifs — Aujourd'hui" : "Prévisions d'accès — Demain";
+    const defaultTitle = info.mode === 'today'
+      ? (attrs.massif_name ? `Accès ${attrs.massif_name} — Aujourd'hui` : "Accès aux massifs — Aujourd'hui")
+      : (attrs.massif_name ? `Prévisions ${attrs.massif_name} — Demain` : "Prévisions d'accès — Demain");
     const title = this.config.title === "Accès aux massifs" ? defaultTitle : this.config.title;
 
     return html`
