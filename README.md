@@ -1,7 +1,7 @@
 # 🌲🔥 Accès Massifs Forestiers 13
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
-[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1+-blue.svg)](https://www.home-assistant.io)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.05+-blue.svg)](https://www.home-assistant.io)
 
 Intégration Home Assistant personnalisée pour récupérer automatiquement les **niveaux d'accès aux 25 massifs forestiers des Bouches-du-Rhône** depuis le site officiel de la Préfecture : [risque-prevention-incendie.fr/13](https://www.risque-prevention-incendie.fr/13).
 
