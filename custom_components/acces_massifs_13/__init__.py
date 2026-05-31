@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -87,10 +88,14 @@ async def _async_register_www(hass: HomeAssistant) -> None:
     """
     www_path = Path(__file__).parent / "www"
     if www_path.is_dir():
-        hass.http.register_static_path(
-            f"/local/community/{DOMAIN}",
-            str(www_path),
-            cache_headers=True,
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    url_path=f"/local/community/{DOMAIN}",
+                    path=str(www_path),
+                    cache_headers=True,
+                )
+            ]
         )
         _LOGGER.debug("Registered static path for %s", www_path)
 
