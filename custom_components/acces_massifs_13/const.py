@@ -5,8 +5,8 @@ from __future__ import annotations
 DOMAIN = "acces_massifs_13"
 
 # ── Season window ──────────────────────────────────────────────────────────────
-SEASON_START_MONTH = 6
-SEASON_START_DAY = 1
+SEASON_START_MONTH = 5
+SEASON_START_DAY = 31
 SEASON_END_MONTH = 9
 SEASON_END_DAY = 30
 
