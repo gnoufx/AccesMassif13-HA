@@ -13,7 +13,7 @@ const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
 const scriptUrl = new URL(import.meta.url);
-const cardVersion = scriptUrl.searchParams.get('v') || '1.0.4';
+const cardVersion = scriptUrl.searchParams.get('v') || '1.0.5';
 
 class AccesMassifsForecastCard extends LitElement {
   static get properties() {
@@ -28,6 +28,8 @@ class AccesMassifsForecastCard extends LitElement {
     super();
     this._animatedCount = 0;
     this._map = null;
+    this._tileLayer = null;
+    this._currentTileUrl = null;
     this._markers = [];
     this._mapId = `map-${Math.random().toString(36).substr(2, 9)}`;
     this._leafletLoading = null;
@@ -191,6 +193,13 @@ class AccesMassifsForecastCard extends LitElement {
     requestAnimationFrame(step);
   }
 
+  _isDarkMode() {
+    if (this.hass?.themes?.darkMode !== undefined) {
+      return this.hass.themes.darkMode;
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
   // ── Leaflet ──────────────────────────────────────────────
 
   async _loadLeaflet() {
@@ -260,7 +269,12 @@ class AccesMassifsForecastCard extends LitElement {
       attributionControl: true,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    const isDarkMode = this._isDarkMode();
+    this._currentTileUrl = isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    this._tileLayer = L.tileLayer(this._currentTileUrl, {
       attribution: '&copy; OpenStreetMap, &copy; CARTO',
       subdomains: 'abcd',
       maxZoom: 19,
@@ -500,6 +514,16 @@ class AccesMassifsForecastCard extends LitElement {
     if (this.config.show_map && !this._map) {
       setTimeout(() => this._initMap(), 150);
     } else if (this._map) {
+      if (this._tileLayer) {
+        const isDarkMode = this._isDarkMode();
+        const tileUrl = isDarkMode
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+        if (this._currentTileUrl !== tileUrl) {
+          this._tileLayer.setUrl(tileUrl);
+          this._currentTileUrl = tileUrl;
+        }
+      }
       this._updateMapMarkers();
     }
   }
@@ -510,6 +534,8 @@ class AccesMassifsForecastCard extends LitElement {
       this._map.remove();
       this._map = null;
     }
+    this._tileLayer = null;
+    this._currentTileUrl = null;
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;
