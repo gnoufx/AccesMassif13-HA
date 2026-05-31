@@ -659,41 +659,33 @@ class AccesMassifsForecastCard extends LitElement {
         color: rgba(255, 255, 255, 0.55);
       }
 
-      /* ── Off-Season ── */
-      .off-season {
-        text-align: center;
-        padding: 60px 20px;
+      /* ── Off-Season Banner ── */
+      .off-season-banner {
+        background: rgba(33, 150, 243, 0.1);
+        border: 1px solid rgba(33, 150, 243, 0.25);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: #e3f2fd;
+        line-height: 1.4;
       }
 
-      .off-season-trees {
-        font-size: 40px;
-        animation: float 3s ease-in-out infinite;
-        margin-bottom: 20px;
+      .banner-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        animation: rotate-snowflake 6s linear infinite;
         display: inline-block;
       }
 
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
+      @keyframes rotate-snowflake {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
 
-      .off-season-title {
-        font-size: 28px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #4CAF50, #81C784, #A5D6A7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 12px;
-      }
-
-      .off-season-subtitle {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.5);
-        line-height: 1.6;
-        max-width: 400px;
-        margin: 0 auto;
-      }
 
       /* ── Loading / Error ── */
       .loading {
@@ -773,22 +765,6 @@ class AccesMassifsForecastCard extends LitElement {
     const isSeason = attrs.is_season;
     const massifs = attrs.massifs;
 
-    // Off-season
-    if (isSeason === false) {
-      return html`
-        <div class="card-container">
-          ${this._renderHeader(attrs, massifs)}
-          <div class="off-season">
-            <div class="off-season-trees">🌲🌳🌲🌳🌲</div>
-            <div class="off-season-title">Hors saison</div>
-            <div class="off-season-subtitle">
-              La surveillance des massifs forestiers reprend du 1er juin au 30 septembre.
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
     if (!massifs || Object.keys(massifs).length === 0) {
       return html`
         <div class="card-container">
@@ -801,9 +777,22 @@ class AccesMassifsForecastCard extends LitElement {
     return html`
       <div class="card-container">
         ${this._renderHeader(attrs, massifs)}
+        ${this._renderOffSeasonBanner(isSeason)}
         ${this._renderGrid(attrs, massifs)}
         ${this.config.show_map ? this._renderMap() : ''}
         ${this._renderLegend()}
+      </div>
+    `;
+  }
+
+  _renderOffSeasonBanner(isSeason) {
+    if (isSeason !== false) return '';
+    return html`
+      <div class="off-season-banner">
+        <span class="banner-icon">❄️</span>
+        <div class="banner-text">
+          <strong>Hors saison active (1er oct. – 31 mai)</strong> : La surveillance préfectorale est inactive et le risque d'incendie est faible. L'accès à l'ensemble des massifs est libre et ouvert.
+        </div>
       </div>
     `;
   }

@@ -149,20 +149,20 @@ class AccesMassifsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Adjust polling cadence dynamically
         self.update_interval = self._compute_interval()
 
-        # Off‑season: return a skeleton with level 0 for every massif
+        # Off‑season: return a skeleton with level 1 (open) for every massif
         if not in_season:
-            _LOGGER.debug("Off season – returning empty data")
+            _LOGGER.debug("Off season – returning open access data")
             massifs_out: dict[str, Any] = {}
             for m_id, m_info in MASSIFS.items():
                 massifs_out[m_id] = {
                     "name": m_info["name"],
-                    "today_level": 0,
-                    "today_color": LEVEL_COLORS[0],
-                    "today_label": LEVEL_LABELS[0],
+                    "today_level": 1,
+                    "today_color": LEVEL_COLORS[1],
+                    "today_label": LEVEL_LABELS[1],
                     "today_procedure": 0,
-                    "tomorrow_level": 0,
-                    "tomorrow_color": LEVEL_COLORS[0],
-                    "tomorrow_label": LEVEL_LABELS[0],
+                    "tomorrow_level": 1,
+                    "tomorrow_color": LEVEL_COLORS[1],
+                    "tomorrow_label": LEVEL_LABELS[1],
                     "tomorrow_procedure": 0,
                     "latitude": m_info["latitude"],
                     "longitude": m_info["longitude"],
