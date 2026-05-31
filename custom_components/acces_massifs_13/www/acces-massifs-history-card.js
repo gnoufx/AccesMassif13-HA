@@ -4,6 +4,9 @@ const LitElement = customElements.get('hui-masonry-view')
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
+const scriptUrl = new URL(import.meta.url);
+const cardVersion = scriptUrl.searchParams.get('v') || '1.0.4';
+
 const ALL_MASSIF_IDS = [
   '131','132','133','134','135','136','137','138','139',
   '1310','1311','1312','1313','1314','1315','1316','1317',
@@ -911,6 +914,12 @@ window.customCards.push({
   name: 'Accès Massifs - Historique',
   description: 'Historique des accès aux massifs forestiers des Bouches-du-Rhône',
 });
+
+console.info(
+  `%c ACCES-MASSIFS-HISTORY-CARD %c v${cardVersion} `,
+  'color: #fff; background: #e94560; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;',
+  'color: #e94560; background: #1a1a2e; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;'
+);
 
 class AccesMassifsHistoryCardEditor extends LitElement {
   static get properties() {

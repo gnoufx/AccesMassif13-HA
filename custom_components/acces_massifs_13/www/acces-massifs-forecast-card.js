@@ -12,6 +12,9 @@ const LitElement = customElements.get('hui-masonry-view')
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
+const scriptUrl = new URL(import.meta.url);
+const cardVersion = scriptUrl.searchParams.get('v') || '1.0.4';
+
 class AccesMassifsForecastCard extends LitElement {
   static get properties() {
     return {
@@ -224,9 +227,9 @@ class AccesMassifsForecastCard extends LitElement {
     // Load GeoJSON data if not already cached
     if (!this._geoJsonData) {
       try {
-        let response = await fetch('/local/community/acces_massifs_13/massifs_13.geojson');
+        let response = await fetch(`/local/community/acces_massifs_13/massifs_13.geojson?v=${cardVersion}`);
         if (!response.ok) {
-          response = await fetch('/hacsfiles/acces_massifs_13/massifs_13.geojson');
+          response = await fetch(`/hacsfiles/acces_massifs_13/massifs_13.geojson?v=${cardVersion}`);
         }
         if (response.ok) {
           this._geoJsonData = await response.json();
@@ -860,11 +863,12 @@ class AccesMassifsForecastCard extends LitElement {
 
     const stateObj = this._getStateObj();
     if (!stateObj) {
+      const missingEntity = this.config.entity || (this.config.entities && this.config.entities.join(', ')) || 'Aucune entité configurée';
       return html`
         <div class="card-container">
           <div class="error">
             <div class="error-icon">⚠️</div>
-            Entité introuvable : ${this.config.entity}
+            Entité introuvable : ${missingEntity}
           </div>
         </div>
       `;
@@ -1060,7 +1064,7 @@ window.customCards.push({
 });
 
 console.info(
-  '%c ACCES-MASSIFS-FORECAST-CARD %c v1.0.0 ',
+  `%c ACCES-MASSIFS-FORECAST-CARD %c v${cardVersion} `,
   'color: #fff; background: #4CAF50; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;',
   'color: #4CAF50; background: #1a1a2e; font-weight: bold; padding: 2px 6px; border-radius: 0 4px 4px 0;'
 );

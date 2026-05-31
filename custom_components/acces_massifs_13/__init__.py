@@ -104,43 +104,6 @@ async def _async_register_www(hass: HomeAssistant) -> None:
         await _async_register_lovelace_resources(hass)
 
 
-async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
-    """Register the Lovelace card resources programmatically if using storage mode."""
-    lovelace = hass.data.get("lovelace")
-    if not lovelace:
-        _LOGGER.debug("Lovelace not loaded, skipping resource registration")
-        return
-
-    if not hasattr(lovelace, "resources"):
-        _LOGGER.debug("Lovelace is not in storage mode, skipping resource registration")
-        return
-
-    resources = lovelace.resources
-    if not hasattr(resources, "async_items") or not hasattr(resources, "async_create_item"):
-        return
-
-    if not resources.loaded:
-        await resources.async_load()
-
-    urls_to_register = [
-        f"/local/community/{DOMAIN}/acces-massifs-forecast-card.js",
-        f"/local/community/{DOMAIN}/acces-massifs-history-card.js",
-    ]
-
-    current_urls = {
-        res.get("url") if hasattr(res, "get") else getattr(res, "url", None)
-        for res in resources.async_items()
-    }
-
-    for url in urls_to_register:
-        if url not in current_urls:
-            _LOGGER.info("Registering Lovelace resource automatically: %s", url)
-            await resources.async_create_item({
-                "res_type": "module",
-                "url": url,
-            })
-
-
 async def _async_options_updated(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
@@ -183,8 +146,20 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
         _LOGGER.debug("Lovelace resources repository not found, skipping registration")
         return
 
-    # Using the current integration version for query cache-busting
-    version = "1.0.3"
+    if not resources.loaded:
+        await resources.async_load()
+
+    # Load version dynamically from manifest.json
+    version = "1.0.4"
+    try:
+        import json
+        manifest_path = Path(__file__).parent / "manifest.json"
+        if manifest_path.is_file():
+            with open(manifest_path, encoding="utf-8") as f:
+                manifest = json.load(f)
+                version = manifest.get("version", version)
+    except Exception as err:
+        _LOGGER.warning("Could not read version from manifest.json: %s", err)
 
     card_resources = [
         {
@@ -204,7 +179,7 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
         for r in card_resources:
             found_item = None
             for item in existing_items:
-                item_url = item.get("url", "")
+                item_url = item.get("url", "") if hasattr(item, "get") else getattr(item, "url", "")
                 if r["path"] in item_url or item_url.startswith(r["path"]):
                     found_item = item
                     break
@@ -216,17 +191,21 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
                     "type": "module"
                 })
             else:
+                found_url = found_item.get("url", "") if hasattr(found_item, "get") else getattr(found_item, "url", "")
                 # If URL query string differs, update to bust browser cache automatically!
-                if found_item.get("url") != r["url"]:
+                if found_url != r["url"]:
                     _LOGGER.info(
                         "Updating Lovelace resource for cache busting: %s -> %s",
-                        found_item.get("url"),
+                        found_url,
                         r["url"]
                     )
-                    await resources.async_update_item(found_item["id"], {
-                        "url": r["url"],
-                        "type": "module"
-                    })
+                    found_item_id = found_item.get("id") if hasattr(found_item, "get") else getattr(found_item, "id", None)
+                    if found_item_id:
+                        await resources.async_update_item(found_item_id, {
+                            "url": r["url"],
+                            "type": "module"
+                        })
     except Exception as err:
         _LOGGER.error("Failed to automatically register Lovelace resources: %s", err)
+
 
