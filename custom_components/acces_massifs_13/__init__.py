@@ -73,6 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # ── Register www directory for Lovelace card assets ────────────────────
     await _async_register_www(hass)
 
+    # ── Automatically register Lovelace resources for UI Editor support ───
+    await _async_register_lovelace_resources(hass)
+
     # ── Listen for options updates ─────────────────────────────────────────
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
 
@@ -161,3 +164,69 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass.services.async_remove(DOMAIN, SERVICE_FORCE_UPDATE)
 
     return unload_ok
+
+
+async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
+    """Register the Lovelace card resources automatically.
+
+    This ensures that when a user sets up the integration, both Lovelace
+    JS cards are registered in Home Assistant's resource registry
+    with an updated cache-busting version query parameter automatically.
+    """
+    lovelace_data = hass.data.get("lovelace")
+    if not lovelace_data or getattr(lovelace_data, "mode", "storage") != "storage":
+        _LOGGER.debug("Lovelace is not in storage mode, skipping automatic resource registration")
+        return
+
+    resources = lovelace_data.resources
+    if not resources:
+        _LOGGER.debug("Lovelace resources repository not found, skipping registration")
+        return
+
+    # Using the current integration version for query cache-busting
+    version = "1.0.0"
+
+    card_resources = [
+        {
+            "url": f"/local/community/{DOMAIN}/acces-massifs-forecast-card.js?v={version}",
+            "path": f"/local/community/{DOMAIN}/acces-massifs-forecast-card.js",
+        },
+        {
+            "url": f"/local/community/{DOMAIN}/acces-massifs-history-card.js?v={version}",
+            "path": f"/local/community/{DOMAIN}/acces-massifs-history-card.js",
+        },
+    ]
+
+    try:
+        # Get existing items to avoid duplicates
+        existing_items = resources.async_items()
+        
+        for r in card_resources:
+            found_item = None
+            for item in existing_items:
+                item_url = item.get("url", "")
+                if r["path"] in item_url or item_url.startswith(r["path"]):
+                    found_item = item
+                    break
+
+            if found_item is None:
+                _LOGGER.info("Automatically registering Lovelace resource: %s", r["url"])
+                await resources.async_create_item({
+                    "url": r["url"],
+                    "type": "module"
+                })
+            else:
+                # If URL query string differs, update to bust browser cache automatically!
+                if found_item.get("url") != r["url"]:
+                    _LOGGER.info(
+                        "Updating Lovelace resource for cache busting: %s -> %s",
+                        found_item.get("url"),
+                        r["url"]
+                    )
+                    await resources.async_update_item(found_item["id"], {
+                        "url": r["url"],
+                        "type": "module"
+                    })
+    except Exception as err:
+        _LOGGER.error("Failed to automatically register Lovelace resources: %s", err)
+
