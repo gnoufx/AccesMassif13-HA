@@ -10,6 +10,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_SCAN_HOUR,
@@ -153,17 +154,13 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
     if not resources.loaded:
         await resources.async_load()
 
-    # Load version dynamically from manifest.json
-    version = "1.0.4"
+    # Load version dynamically from integration manifest
+    version = "1.0.7"
     try:
-        import json
-        manifest_path = Path(__file__).parent / "manifest.json"
-        if manifest_path.is_file():
-            with open(manifest_path, encoding="utf-8") as f:
-                manifest = json.load(f)
-                version = manifest.get("version", version)
+        integration = await async_get_integration(hass, DOMAIN)
+        version = integration.version
     except Exception as err:
-        _LOGGER.warning("Could not read version from manifest.json: %s", err)
+        _LOGGER.warning("Could not read version from integration manifest: %s", err)
 
     card_resources = [
         {
@@ -192,7 +189,7 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
                 _LOGGER.info("Automatically registering Lovelace resource: %s", r["url"])
                 await resources.async_create_item({
                     "url": r["url"],
-                    "type": "module"
+                    "res_type": "module"
                 })
             else:
                 found_url = found_item.get("url", "") if hasattr(found_item, "get") else getattr(found_item, "url", "")
@@ -207,7 +204,7 @@ async def _async_register_lovelace_resources(hass: HomeAssistant) -> None:
                     if found_item_id:
                         await resources.async_update_item(found_item_id, {
                             "url": r["url"],
-                            "type": "module"
+                            "res_type": "module"
                         })
     except Exception as err:
         _LOGGER.error("Failed to automatically register Lovelace resources: %s", err)

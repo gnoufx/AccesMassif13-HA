@@ -1,0 +1,3 @@
+force_update:
+  name: "Forcer la mise à jour"
+  description: "Force la mise à jour immédiate des données d'accès aux massifs."

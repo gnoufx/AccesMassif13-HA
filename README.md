@@ -2,7 +2,7 @@
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.5.0+-blue.svg)](https://www.home-assistant.io)
-[![Version](https://img.shields.io/badge/Version-1.0.6-green.svg)](https://github.com/acces-massifs-13-ha)
+[![Version](https://img.shields.io/badge/Version-1.0.7-green.svg)](https://github.com/acces-massifs-13-ha)
 
 Intégration Home Assistant personnalisée et haut de gamme pour récupérer automatiquement les **niveaux d'accès aux 25 massifs forestiers des Bouches-du-Rhône** depuis le site officiel de la Préfecture : [risque-prevention-incendie.fr/13](https://www.risque-prevention-incendie.fr/13).
 
@@ -22,7 +22,7 @@ Intégration Home Assistant personnalisée et haut de gamme pour récupérer aut
 *   📈 **Historique persistant multi-saisons** — Stockage JSON local autonome dans le dossier `.storage/` pour sauvegarder et afficher l'historique complet sur plusieurs années, indépendamment de la purge du recorder HA.
 *   🎨 **Deux cartes Lovelace premium** — Design sombre glassmorphism ultra-léché avec animations fluides d'entrée, effets de surbrillance au survol et adaptation naturelle à vos thèmes Home Assistant (clair/sombre).
 *   🗺️ **Cartographie vectorielle interactive** — Rendu Leaflet local (sans CDN) dessinant les frontières réelles des massifs en vert/rouge (polygones GeoJSON interactifs) avec popups de restriction au clic.
-*   ⚡ **Intégration Lovelace transparente (Zéro-Configuration)** — Enregistrement automatique des cartes custom dans le registre des ressources de Home Assistant dès l'installation, avec un système de **cache-busting intelligent** (`?v=1.0.6`) lié au fichier `manifest.json` pour garantir que les mises à jour s'affichent instantanément sans forcer le vidage du cache du navigateur !
+*   ⚡ **Intégration Lovelace transparente (Zéro-Configuration)** — Enregistrement automatique des cartes custom dans le registre des ressources de Home Assistant dès l'installation, avec un système de **cache-busting intelligent** (`?v=1.0.7`) lié au fichier `manifest.json` pour garantir que les mises à jour s'affichent instantanément sans forcer le vidage du cache du navigateur !
 *   ⚙️ **Éditeurs Visuels Natifs (UI Editors)** — Les deux cartes custom se configurent entièrement en mode graphique dans l'interface de Home Assistant (sélection d'entités, commutateurs, menus déroulants, champs texte), sans aucun code YAML requis !
 *   🎯 **Intégration visuelle locale (Branding)** — Inclut des icônes et logos locaux transparents (thèmes clairs et sombres) pour un rendu impeccable dans la liste des intégrations de Home Assistant.
 
